@@ -4,63 +4,69 @@ import "fmt"
 
 func toint(str string) int {
 	sum := 0
-	for i := len(str) - 1; i >= 0; i-- {
-		sum *= 10
-		sum += int(str[i] - '0')
+	for i := 0; i < len(str); i++ {
+		sum = sum*10 + int(str[i]-'0')
 	}
 	return sum
 }
 
 func solution(version1 string, version2 string) int {
-	tag1 := 0
-	tag2 := 0
-	s1 := ""
-	s2 := ""
+	v1Len, v2Len := len(version1), len(version2)
+	tag1, tag2 := 0, 0
+
 	for {
-		// Find the next segment in version1
-		for tag1 < len(version1) && version1[tag1] != '.' {
+		// Skip dots
+		for tag1 < v1Len && version1[tag1] == '.' {
+			tag1++
+		}
+		for tag2 < v2Len && version2[tag2] == '.' {
+			tag2++
+		}
+
+		// Extract numbers
+		var s1, s2 string
+		for tag1 < v1Len && version1[tag1] != '.' {
 			s1 += string(version1[tag1])
 			tag1++
 		}
-		// Find the next segment in version2
-		for tag2 < len(version2) && version2[tag2] != '.' {
+		for tag2 < v2Len && version2[tag2] != '.' {
 			s2 += string(version2[tag2])
 			tag2++
 		}
-		// Compare the segments
-		if len(s1) > 0 && len(s2) > 0 {
-			if i := toint(s1); i > toint(s2) {
-				return 1
-			} else if i < toint(s2) {
-				return -1
-			}
+
+		// Convert strings to integers
+		num1, num2 := toint(s1), toint(s2)
+
+		// Compare numbers
+		if num1 > num2 {
+			return 1
+		} else if num1 < num2 {
+			return -1
 		}
-		// Reset for the next segment
-		s1 = ""
-		s2 = ""
-		tag1++
-		tag2++
-		// If we've reached the end of both versions, they are equal
-		if tag1 == len(version1) && tag2 == len(version2) {
+
+		// If both have reached the end, they are equal
+		if tag1 == v1Len && tag2 == v2Len {
 			return 0
 		}
-		// If one version is a prefix of the other, the shorter one is smaller
-		if tag1 == len(version1) || tag2 == len(version2) {
-			// Check if the remaining part of the longer version contains a non-zero number
-			if tag1 == len(version1) {
-				for tag2 < len(version2) && version2[tag2] == '.' {
-					tag2++
-				}
-				if tag2 < len(version2) {
+
+		// If one has reached the end, but not the other, check if the remaining part is all zeros
+		if tag1 == v1Len {
+			// Check if the remaining part of version2 is all zeros
+			for tag2 < v2Len {
+				if version2[tag2] != '.' && version2[tag2] != '0' {
 					return -1
 				}
-			} else {
-				for tag1 < len(version1) && version1[tag1] == '.' {
-					tag1++
-				}
-				if tag1 < len(version1) {
+				tag2++
+			}
+			return 0
+		}
+		if tag2 == v2Len {
+			// Check if the remaining part of version1 is all zeros
+			for tag1 < v1Len {
+				if version1[tag1] != '.' && version1[tag1] != '0' {
 					return 1
 				}
+				tag1++
 			}
 			return 0
 		}
@@ -73,4 +79,6 @@ func main() {
 	fmt.Println(solution("1.0.1", "1") == 1)
 	fmt.Println(solution("7.5.2.4", "7.5.3") == -1)
 	fmt.Println(solution("1.0", "1.0.0") == 0)
+	fmt.Println(solution("1", "1.0") == 0)     // "1" and "1.0" should be equal
+	fmt.Println(solution("1.0.0.0", "1") == 0) // "1.0.0.0" and "1" should be equal
 }
